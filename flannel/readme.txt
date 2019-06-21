@@ -1,0 +1,2 @@
+kube-admin的--pod-network-cidr=10.244.0.0/16
+
