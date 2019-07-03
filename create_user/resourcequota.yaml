@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  namespace: test
+  name: test-resource-quota
+spec:
+  hard:
+    pods: 20
+    requests.cpu: 250m
+    requests.memory: 256Mi
+    limits.cpu: 1000m
+    limits.memory: 2Gi
+    configmaps: 20
+    persistentvolumeclaims: 20
+    replicationcontrollers: 20
+    count/deployments.apps: 20
+    count/deployments.extensions: 20
+    secrets: 20
+    services: 50
