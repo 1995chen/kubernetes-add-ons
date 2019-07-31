@@ -1,0 +1,96 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sftp-config
+  namespace: platform
+  labels:
+    category: sftp-config
+data:
+  users.conf: |
+    admin:shukun:1001:0:root:/home/admin
+    shukun:shukun:1002:100
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sftp
+  namespace: platform
+  labels:
+    category: sftp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      platform: sftp
+  template:
+    metadata:
+      labels:
+        platform: sftp
+    spec:
+      serviceAccountName: platform
+      restartPolicy: Always
+      volumes:
+      - name: model
+        persistentVolumeClaim:
+          claimName: model
+      - name: source
+        persistentVolumeClaim:
+          claimName: source
+      - name: output
+        persistentVolumeClaim:
+          claimName: output
+      - name: config
+        configMap:
+          name: sftp-config
+          items:
+          - key: users.conf
+            path: users.conf
+      containers:
+      - name: sftp
+        imagePullPolicy: IfNotPresent
+        image: atmoz/sftp
+        ports:
+        - containerPort: 22
+        args:
+        - shukun:shuKun@2O19:1001
+        env:
+        - name: TZ
+          value: "Asia/Shanghai"
+        volumeMounts:
+        - mountPath: /home/admin/model
+          name: model
+        - mountPath: /home/admin/source
+          name: source
+        - mountPath: /home/admin/output
+          name: output
+        - mountPath: /home/shukun/source
+          name: output
+          subPath: source
+          readOnly: true
+        - mountPath: /home/shukun/output
+          name: output
+          readOnly: true
+        - mountPath: /etc/sftp/
+          name: config
+          readOnly: true
+        resources:
+          limits:  
+            cpu: "500m"
+            memory: "800Mi"
+          requests:
+            cpu: "250m"
+            memory: "400Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sftp
+  namespace: platform
+spec:
+  ports:
+  - port: 22
+    targetPort: 22
+    nodePort: 30022
+  type: NodePort
+  selector:
+    platform: sftp
